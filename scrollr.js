@@ -25,6 +25,8 @@
 		//
 		this.element.addEventListener(startEvent, this, false);
 		//
+		this.element.style.webkitTransform = 'translate3d(0, 0, 0)';
+		//
 		return this;
 	};
 	//
@@ -59,15 +61,20 @@
 			}
 		},
 		setMetrics: function (e) {
+			var
 			// set variables
-			var el = this.element;
+			el = this.element,
+			computedStyle = doc.defaultView.getComputedStyle(this.element, null),
+			transform = new WebKitCSSMatrix(computedStyle.webkitTransform),
+			contentHeight = el.clientHeight,
+			contentWidth = el.clientWidth,
+			elementFrameHeight = el.parentNode.clientHeight,
+			elementFrameWidth = el.parentNode.clientWidth;
 			// metrics
-			this.contentHeight = el.clientHeight;
-			this.contentWidth = el.clientWidth;
-			this.elementFrameHeight = el.parentNode.clientHeight;
-			this.elementFrameWidth = el.parentNode.clientWidth;
-			this.heightDiff = Math.min(this.elementFrameHeight - this.contentHeight, 0);
-			this.widthDiff = Math.min(this.elementFrameWidth - this.contentWidth, 0);
+			this.heightDiff = Math.min(elementFrameHeight - contentHeight, 0);
+			this.widthDiff = Math.min(elementFrameWidth - contentWidth, 0);
+			this.contentStartOffsetX = transform.m41;
+			this.contentStartOffsetY = transform.m42;
 			// start time
 			this._startTime = e.timeStamp;
 		},
@@ -80,10 +87,12 @@
 			// end time
 			this._endTime = e.timeStamp;
 			// velocity
-			this.velocityX = Math.max(Math.abs((clientX - this.startTouchX) / (this._endTime - this._startTime)), 1);
-			this.velocityY = Math.max(Math.abs((clientY - this.startTouchY) / (this._endTime - this._startTime)), 1);
+			this.velocityX = Math.abs((clientX - this.startTouchX) / (this._endTime - this._startTime));
+			this.velocityY = Math.abs((clientY - this.startTouchY) / (this._endTime - this._startTime));
 		},
 		onTouchStart: function (e) {
+			// not touching
+			this.touching = true;
 			// initialize velocity
 			this.velocityX = 1;
 			this.velocityY = 1;
@@ -95,9 +104,6 @@
 			var eTouches = e.touches;
 			this.startTouchX = (eTouches) ? eTouches[0].clientX : e.clientX;
 			this.startTouchY = (eTouches) ? eTouches[0].clientY : e.clientY;
-			// content start offset
-			this.contentStartOffsetX = this.contentOffsetX;
-			this.contentStartOffsetY = this.contentOffsetY;
 		},
 		onTouchMove: function (e) {
 			// disable selection
@@ -135,6 +141,8 @@
 			this.animateTo(this.newX, this.newY);
 		},
 		onTouchEnd: function (e) {
+			// not touching
+			this.touching = false;
 			// disable selection
 			this.element.style.WebkitUserSelect = '';
 			// momentum
@@ -142,7 +150,8 @@
 		},
 		momentumTo: function (offsetX, offsetY) {
 			//
-			var elementStyle = this.element.style;
+			var
+			elementStyle = this.element.style;
 			//
 			this.contentOffsetX = offsetX;
 			this.contentOffsetY = offsetY;
@@ -152,12 +161,14 @@
 		},
 		animateTo: function (offsetX, offsetY) {
 			//
-			var elementStyle = this.element.style;
+			var
+			elementStyle = this.element.style,
+			transformSpeed = this.bounceBackTime * Math.max(this.velocityX, this.velocityY);
 			//
 			this.contentOffsetX = offsetX;
 			this.contentOffsetY = offsetY;
 			//
-			elementStyle.webkitTransition = '-webkit-transform '+(this.bounceBackTime * Math.max(this.velocityX, this.velocityY))+'ms cubic-bezier(0.33, 0.66, 0.66, 1)';
+			elementStyle.webkitTransition = '-webkit-transform '+transformSpeed+'ms cubic-bezier(0.33, 0.66, 0.66, 1)';
 			elementStyle.webkitTransform = 'translate3d('+offsetX+'px, '+offsetY+'px, 0)';
 		},
 		doMomentum: function (e) {
