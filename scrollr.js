@@ -1,6 +1,6 @@
 (function (win, doc) {
-	//
 	var
+	//
 	_defined = function(valA, valB) {
 		return valA != undefined ? valA : valB;
 	};
@@ -75,8 +75,6 @@
 			this.widthDiff = Math.min(elementFrameWidth - contentWidth, 0);
 			this.contentStartOffsetX = transform.m41;
 			this.contentStartOffsetY = transform.m42;
-			// start time
-			this._startTime = e.timeStamp;
 		},
 		setVelocity: function (e) {
 			// client
@@ -84,8 +82,6 @@
 			eTouches = e.touches,
 			clientX = eTouches ? eTouches[0].clientX : e.clientX,
 			clientY = eTouches ? eTouches[0].clientY : e.clientY;
-			// end time
-			this._endTime = e.timeStamp;
 			// velocity
 			this.velocityX = Math.abs((clientX - this.startTouchX) / (this._endTime - this._startTime));
 			this.velocityY = Math.abs((clientY - this.startTouchY) / (this._endTime - this._startTime));
@@ -93,6 +89,8 @@
 		onTouchStart: function (e) {
 			// not touching
 			this.touching = true;
+			// start time
+			this._startTime = e.timeStamp;
 			// initialize velocity
 			this.velocityX = 1;
 			this.velocityY = 1;
@@ -106,10 +104,10 @@
 			this.startTouchY = (eTouches) ? eTouches[0].clientY : e.clientY;
 		},
 		onTouchMove: function (e) {
-			// disable selection
-			this.element.style.WebkitUserSelect = 'none';
 			// get end velocity
 			this.setVelocity(e);
+			// disable selection
+			this.element.style.WebkitUserSelect = 'none';
 			//
 			var
 			eTouches = e.touches,
@@ -143,6 +141,8 @@
 		onTouchEnd: function (e) {
 			// not touching
 			this.touching = false;
+			// end time
+			this._endTime = e.timeStamp;
 			// disable selection
 			this.element.style.WebkitUserSelect = '';
 			// momentum
